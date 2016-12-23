@@ -1,0 +1,5 @@
+{
+    "require": {
+        "stevenmaguire/oauth2-box": "^0.1.0"
+    }
+}

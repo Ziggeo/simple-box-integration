@@ -1,4 +1,6 @@
 {
+    "name": "Pablo2309/simple-box-integration",
+    "description": "Simple PHP wrapper for the Box API",
     "require": {
         "stevenmaguire/oauth2-box": "^0.1.0",
         "guzzlehttp/guzzle": "~6.0"

@@ -1,5 +1,4 @@
 <?php
-
 /**
  * BoxHttpClientInterface
  */
@@ -14,9 +13,9 @@ interface BoxHttpClientInterface
      * @param  array  $headers Request Headers
      * @param  array  $options Additional Options
      *
-     * @return \Kunnu\Box\Http\BoxRawResponse Raw response from the server
+     * @return BoxRawResponse Raw response from the server
      *
-     * @throws \Kunnu\Box\Exceptions\BoxClientException
+     * @throws BoxClientException
      */
     public function send($url, $method, $body, $headers = [], $options = []);
 }

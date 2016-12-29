@@ -1,5 +1,6 @@
 <?php
 namespace Pablo2309\BoxContent\Base;
+use BoxHttpClientFactory;
 use GuzzleHttp\Psr7\Stream;
 use GuzzleHttp\Psr7\Request;
 use Stevenmaguire\OAuth2\Client\Provider\Box;
@@ -40,14 +41,14 @@ class BoxMain
     /**
      * Random String Generator
      *
-     * @var \Box\Security\RandomStringGeneratorInterface
+     * @var Security\RandomStringGeneratorInterface
      */
     protected $randomStringGenerator;
 
     /**
      * Persistent Data Store
      *
-     * @var \Box\Store\PersistentDataStoreInterface
+     * @var Store\PersistentDataStoreInterface
      */
     protected $persistentDataStore;
 
@@ -104,17 +105,12 @@ class BoxMain
         //Make and Set the BoxClient
         $this->client = new BoxClient($httpClient);
 
-        //Make and Set the Random String Generator
-        $this->randomStringGenerator = RandomStringGeneratorFactory::makeRandomStringGenerator($config['random_string_generator']);
-
-        //Make and Set the Persistent Data Store
-        $this->persistentDataStore = PersistentDataStoreFactory::makePersistentDataStore($config['persistent_data_store']);
     }
 
     /**
      * Get the Client
      *
-     * @return \Box\BoxClient
+     * @return BoxClient
      */
     public function getClient()
     {
@@ -134,29 +130,11 @@ class BoxMain
     /**
      * Get the BoxMain App.
      *
-     * @return \Box\BoxApp BoxMain App
+     * @return BoxApp BoxMain App
      */
     public function getApp()
     {
         return $this->app;
-    }
-
-    /**
-     * Get OAuth2Client
-     *
-     * @return \Box\Authentication\OAuth2Client
-     */
-    public function getOAuth2Client()
-    {
-        if (!$this->oAuth2Client instanceof OAuth2Client) {
-            return new OAuth2Client(
-                $this->getApp(),
-                $this->getClient(),
-                $this->getRandomStringGenerator()
-            );
-        }
-
-        return $this->oAuth2Client;
     }
 
     /**
@@ -180,25 +158,11 @@ class BoxMain
     }
 
     /**
-     * Get BoxMain Auth Helper
-     *
-     * @return \Box\Authentication\BoxAuthHelper
-     */
-    public function getAuthHelper()
-    {
-        return new BoxAuthHelper(
-            $this->getOAuth2Client(),
-            $this->getRandomStringGenerator(),
-            $this->getPersistentDataStore()
-        );
-    }
-
-    /**
      * Set the Access Token.
      *
      * @param string $accessToken Access Token
      *
-     * @return \Box\BoxMain BoxMain Client
+     * @return BoxMain BoxMain Client
      */
     public function setAccessToken($accessToken)
     {
@@ -216,9 +180,9 @@ class BoxMain
      * @param  array  $params       Request Query Params
      * @param  string $accessToken Access Token to send with the Request
      *
-     * @return \Box\BoxResponse
+     * @return BoxResponse
      *
-     * @throws \Box\Exceptions\BoxClientException
+     * @throws Exceptions\BoxClientException
      */
     public function sendRequest($method, $endpoint, $endpointType = 'api', array $params = [], $accessToken = null)
     {
@@ -240,7 +204,7 @@ class BoxMain
      * @param  array  $params       Request Query Params
      * @param  string $accessToken Access Token to send with the Request
      *
-     * @return \Box\BoxResponse
+     * @return BoxResponse
      */
     public function postToAPI($endpoint, array $params = [], $accessToken = null)
     {
@@ -254,7 +218,7 @@ class BoxMain
      * @param  array  $params       Request Query Params
      * @param  string $accessToken Access Token to send with the Request
      *
-     * @return \Box\BoxResponse
+     * @return BoxResponse
      */
     public function postToContent($endpoint, array $params = [], $accessToken = null)
     {

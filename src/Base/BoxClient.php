@@ -1,6 +1,6 @@
 <?php
 namespace Pablo2309\BoxContent\Base;
-
+use BoxHttpClientInterface;
 
 /**
  * BoxClient
@@ -24,7 +24,7 @@ class BoxClient
     /**
      * BoxHttpClientInterface Implementation
      *
-     * @var \Kunnu\Box\Http\Clients\BoxHttpClientInterface
+     * @var BoxHttpClientInterface
      */
     protected $httpClient;
 
@@ -42,7 +42,7 @@ class BoxClient
     /**
      * Get the HTTP Client
      *
-     * @return \Kunnu\Box\Http\Clients\BoxHttpClientInterface $httpClient
+     * @return BoxHttpClientInterface $httpClient
      */
     public function getHttpClient()
     {
@@ -52,9 +52,9 @@ class BoxClient
     /**
      * Set the HTTP Client
      *
-     * @param \Kunnu\Box\Http\Clients\BoxHttpClientInterface $httpClient
+     * @param BoxHttpClientInterface $httpClient
      *
-     * @return \Kunnu\Box\BoxClient
+     * @return BoxClient
      */
     public function setHttpClient(BoxHttpClientInterface $httpClient)
     {
@@ -136,9 +136,9 @@ class BoxClient
      *
      * @param  BoxRequest $request
      *
-     * @return \Kunnu\Box\BoxResponse
+     * @return BoxResponse
      *
-     * @throws \Kunnu\Box\Exceptions\BoxClientException
+     * @throws Exceptions\BoxClientException
      */
     public function sendRequest(BoxRequest $request)
     {

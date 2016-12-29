@@ -1,5 +1,4 @@
 <?php
-namespace Kunnu\Box\Http\Clients;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Request;
@@ -7,8 +6,8 @@ use Psr\Http\Message\StreamInterface;
 use GuzzleHttp\Exception\RingException;
 use Psr\Http\Message\ResponseInterface;
 use GuzzleHttp\Exception\RequestException;
-use Kunnu\Box\Http\BoxRawResponse;
-use Kunnu\Box\Exceptions\BoxClientException;
+use BoxRawResponse;
+use BoxClientException;
 
 /**
  * BoxGuzzleHttpClient
@@ -42,9 +41,9 @@ class BoxGuzzleHttpClient implements BoxHttpClientInterface
      * @param  array  $headers Request Headers
      * @param  array  $options Additional Options
      *
-     * @return \Kunnu\Box\Http\BoxRawResponse Raw response from the server
+     * @return BoxRawResponse Raw response from the server
      *
-     * @throws \Kunnu\Box\Exceptions\BoxClientException
+     * @throws BoxClientException
      */
     public function send($url, $method, $body, $headers = [], $options = [])
     {

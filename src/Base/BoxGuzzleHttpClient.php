@@ -1,13 +1,11 @@
 <?php
-
+namespace Pablo2309\BoxContent\Base;
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Request;
 use Psr\Http\Message\StreamInterface;
 use GuzzleHttp\Exception\RingException;
 use Psr\Http\Message\ResponseInterface;
 use GuzzleHttp\Exception\RequestException;
-use BoxRawResponse;
-use BoxClientException;
 
 /**
  * BoxGuzzleHttpClient
@@ -57,13 +55,13 @@ class BoxGuzzleHttpClient implements BoxHttpClientInterface
             $rawResponse = $e->getResponse();
 
             if ($e->getPrevious() instanceof RingException || !$rawResponse instanceof ResponseInterface) {
-                throw new BoxClientException($e->getMessage(), $e->getCode());
+                throw new Exceptions\BoxClientException($e->getMessage(), $e->getCode());
             }
         }
 
         //Something went wrong
         if ($rawResponse->getStatusCode() >= 400) {
-            throw new BoxClientException($rawResponse->getBody());
+            throw new Exceptions\BoxClientException($rawResponse->getBody());
         }
 
         //Get the Response Body

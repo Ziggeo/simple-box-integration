@@ -1,6 +1,5 @@
 <?php
 namespace Pablo2309\BoxContent\Base;
-use BoxHttpClientInterface;
 
 /**
  * BoxClient
@@ -146,14 +145,14 @@ class BoxClient
         $method = $request->getMethod();
 
         //Prepare Request
-        list($url, $headers, $requestBody) = $this->prepareRequest($request);
+        list($url, $headers, $requestBody, $options) = $this->prepareRequest($request);
 
         //Send the Request to the Server through the HTTP Client
         //and fetch the raw response as BoxRawResponse
-        $rawResponse = $this->getHttpClient()->send($url, $method, $requestBody, $headers);
+        $rawResponse = $this->getHttpClient()->send($url, $method, $requestBody, $headers, $options);
 
         //Create BoxResponse from BoxRawResponse
-        $dropboxResponse = new BoxResponse(
+        $boxResponse = new BoxResponse(
             $request,
             $rawResponse->getBody(),
             $rawResponse->getHttpResponseCode(),
@@ -161,7 +160,7 @@ class BoxClient
         );
 
         //Return the BoxResponse
-        return $dropboxResponse;
+        return $boxResponse;
     }
 
     /**
@@ -169,26 +168,34 @@ class BoxClient
      *
      * @param  BoxResponse $request
      *
-     * @return array [Request URL, Request Headers, Request Body]
+     * @return array [Request URL, Request Headers, Request Body, Options Array]
      */
     protected function prepareRequest(BoxRequest $request)
     {
+        $options = array();
+        $contentType = true;
         //Build URL
         $url = $this->buildUrl($request->getEndpoint(), $request->getEndpointType());
 
         //The Endpoint is content
-        if ($request->getEndpointType() === 'content') {
-            //Box requires the parameters to be passed
-            //through the 'Box-API-Arg' header
-            $request->setHeaders(['Box-API-Arg' => json_encode($request->getParams())]);
-
+        if ($request->getEndpointType() === 'upload') {
+            $requestBody = null;
             //If a File is also being uploaded
             if ($request->hasFile()) {
-                //Content Type
-                $request->setContentType("application/octet-stream");
-
                 //Request Body (File Contents)
-                $requestBody = $request->getStreamBody()->getBody();
+                $options = array(
+                   "multipart" => array(
+                       array(
+                           'name'     => 'attributes',
+                           'contents' => json_encode($request->getParams()["attributes"])
+                       ),
+                       array(
+                           'name'     => 'file',
+                           'contents' => fopen($request->getFile()->getFilePath(), 'r')
+                       )
+                   )
+                );
+                $contentType = false;
             } else {
                 //Empty Body
                 $requestBody = null;
@@ -199,20 +206,15 @@ class BoxClient
             $requestBody = $request->getJsonBody()->getBody();
         }
 
-        //Empty body
-        if (is_null($requestBody)) {
-            //Content Type needs to be kept empty
-            $request->setContentType("");
-        }
-
         //Build headers
         $headers = array_merge(
             $this->buildAuthHeader($request->getAccessToken()),
-            $this->buildContentTypeHeader($request->getContentType()),
             $request->getHeaders()
         );
 
+        if ($contentType)
+            $headers[] = $this->buildContentTypeHeader($request->getContentType());
         //Return the URL, Headers and Request Body
-        return [$url, $headers, $requestBody];
+        return [$url, $headers, $requestBody, $options];
     }
 }

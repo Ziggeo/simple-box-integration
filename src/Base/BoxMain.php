@@ -1,6 +1,8 @@
 <?php
 namespace Pablo2309\BoxContent\Base;
-use BoxHttpClientFactory;
+use Pablo2309\BoxContent\Content\BoxFile;
+use Pablo2309\BoxContent\Content\BoxFileMetadata;
+use Pablo2309\BoxContent\Content\FolderMetadata;
 use GuzzleHttp\Psr7\Stream;
 use GuzzleHttp\Psr7\Request;
 use Stevenmaguire\OAuth2\Client\Provider\Box;
@@ -222,7 +224,7 @@ class BoxMain
      */
     public function postToContent($endpoint, array $params = [], $accessToken = null)
     {
-        return $this->sendRequest("POST", $endpoint, 'content', $params, $accessToken);
+        return $this->sendRequest("POST", $endpoint, 'upload', $params, $accessToken);
     }
 
     /**
@@ -230,7 +232,7 @@ class BoxMain
      *
      * @param  BoxResponse $response
      *
-     * @return \Box\Models\ModelInterface
+     * @return \Pablo2309\BoxContent\Content\ModelInterface
      */
     public function makeModelFromResponse(BoxResponse $response)
     {
@@ -244,31 +246,31 @@ class BoxMain
     /**
      * Make BoxFile Object
      *
-     * @param  string|BoxFile $dropboxFile BoxFile object or Path to file
+     * @param  string|BoxFile $boxFile BoxFile object or Path to file
      * @param int $maxLength   Max Bytes to read from the file
      * @param int $offset      Seek to specified offset before reading
      *
      * @return \Box\BoxFile
      */
-    public function makeBoxFile($dropboxFile, $maxLength = -1, $offset = -1)
+    public function makeBoxFile($boxFile, $maxLength = -1, $offset = -1)
     {
         //Uploading file by file path
-        if (!$dropboxFile instanceof BoxFile) {
+        if (!$boxFile instanceof BoxFile) {
             //File is valid
-            if (is_file($dropboxFile)) {
+            if (is_file($boxFile)) {
                 //Create a BoxFile Object
-                $dropboxFile = new BoxFile($dropboxFile, $maxLength, $offset);
+                $boxFile = new BoxFile($boxFile, $maxLength, $offset);
             } else {
                 //File invalid/doesn't exist
-                throw new BoxClientException("File '{$dropboxFile}' is invalid.");
+                throw new Exceptions\BoxClientException("File '{$boxFile}' is invalid.");
             }
         }
 
-        $dropboxFile->setOffset($offset);
-        $dropboxFile->setMaxLength($maxLength);
+        $boxFile->setOffset($offset);
+        $boxFile->setMaxLength($maxLength);
 
         //Return the BoxFile Object
-        return $dropboxFile;
+        return $boxFile;
     }
 
     /**
@@ -279,13 +281,13 @@ class BoxMain
      *
      * @link https://www.box.com/developers/documentation/http/documentation#files-get_metadata
      *
-     * @return \Box\Models\FileMetadata|\Box\Models\FolderMetadata
+     * @return \Pablo2309\BoxContent\Content\BoxFileMetadata|\Pablo2309\BoxContent\Content\FolderMetadata
      */
     public function getMetadata($path, array $params = [])
     {
         //Root folder is unsupported
         if ($path === '/') {
-            throw new BoxClientException("Metadata for the root folder is unsupported.");
+            throw new Exceptions\BoxClientException("Metadata for the root folder is unsupported.");
         }
 
         //Set the path
@@ -306,7 +308,7 @@ class BoxMain
      *
      * @link https://www.box.com/developers/documentation/http/documentation#files-list_folder
      *
-     * @return \Box\Models\MetadataCollection
+     * @return \Pablo2309\BoxContent\Content\MetadataCollection
      */
     public function listFolder($path = null, array $params = [])
     {
@@ -335,7 +337,7 @@ class BoxMain
      *
      * @link https://www.box.com/developers/documentation/http/documentation#files-list_folder-continue
      *
-     * @return \Box\Models\MetadataCollection
+     * @return \Pablo2309\BoxContent\Content\MetadataCollection
      */
     public function listFolderContinue($cursor)
     {
@@ -375,7 +377,7 @@ class BoxMain
 
         //No cursor returned
         if (!$cursor) {
-            throw new BoxClientException("Could not retrieve cursor. Something went wrong.");
+            throw new Exceptions\BoxClientException("Could not retrieve cursor. Something went wrong.");
         }
 
         //Return the cursor
@@ -390,7 +392,7 @@ class BoxMain
      *
      * @link https://www.box.com/developers/documentation/http/documentation#files-list_revisions
      *
-     * @return \Box\Models\ModelCollection
+     * @return \Pablo2309\BoxContent\Content\ModelCollection
      */
     public function listRevisions($path, array $params = [])
     {
@@ -405,13 +407,13 @@ class BoxMain
         //is used by the ModelFactory to resolve the correct
         //model. But since we know that revisions returned
         //are file metadata objects, we can explicitly cast
-        //them as \Box\Models\FileMetadata manually.
+        //them as \Pablo2309\BoxContent\Content\BoxFileMetadata manually.
         $body = $response->getDecodedBody();
         $entries = isset($body['entries']) ? $body['entries'] : [];
         $processedEntries = [];
 
         foreach ($entries as $entry) {
-            $processedEntries[] = new FileMetadata($entry);
+            $processedEntries[] = new BoxFileMetadata($entry);
         }
 
         return new ModelCollection($processedEntries);
@@ -426,7 +428,7 @@ class BoxMain
      *
      * @link https://www.box.com/developers/documentation/http/documentation#files-search
      *
-     * @return \Box\Models\SearchResults
+     * @return \Pablo2309\BoxContent\Content\SearchResults
      */
     public function search($path, $query, array $params = [])
     {
@@ -450,27 +452,28 @@ class BoxMain
     /**
      * Create a folder at the given path
      *
-     * @param  string   $path       Path to create
+     * @param  string   $name       Path to create
      * @param  boolean  $autorename Auto Rename File
      *
      * @link https://www.box.com/developers/documentation/http/documentation#files-create_folder
      *
-     * @return \Box\Models\FolderMetadata
+     * @return \Pablo2309\BoxContent\Content\FolderMetadata
      */
-    public function createFolder($path, $autorename = false)
+    public function createFolder($name, $autorename = false)
     {
         //Path cannot be null
-        if (is_null($path)) {
-            throw new BoxClientException("Path cannot be null.");
+        if (is_null($name)) {
+            throw new Exceptions\BoxClientException("Name cannot be null.");
         }
 
         //Create Folder
-        $response = $this->postToAPI('/files/create_folder', ['path' => $path, 'autorename' => $autorename]);
+        $response = $this->postToAPI('/folders', ['name' => $name, 'autorename' => $autorename, 'parent' => array("id" => 0)]);
 
         //Fetch the Metadata
         $body = $response->getDecodedBody();
 
         //Make and Return the Model
+
         return new FolderMetadata($body);
     }
 
@@ -481,13 +484,13 @@ class BoxMain
      *
      * @link https://www.box.com/developers/documentation/http/documentation#files-delete
      *
-     * @return \Box\Models\DeletedMetadata|FileMetadata|FolderMetadata
+     * @return \Pablo2309\BoxContent\Content\DeletedMetadata|BoxFileMetadata|FolderMetadata
      */
     public function delete($path)
     {
         //Path cannot be null
         if (is_null($path)) {
-            throw new BoxClientException("Path cannot be null.");
+            throw new Exceptions\BoxClientException("Path cannot be null.");
         }
 
         //Delete
@@ -504,13 +507,13 @@ class BoxMain
      *
      * @link https://www.box.com/developers/documentation/http/documentation#files-move
      *
-     * @return \Box\Models\FileMetadata|FileMetadata|DeletedMetadata
+     * @return \Pablo2309\BoxContent\Content\BoxFileMetadata|BoxFileMetadata|DeletedMetadata
      */
     public function move($fromPath, $toPath)
     {
         //From and To paths cannot be null
         if (is_null($fromPath) || is_null($toPath)) {
-            throw new BoxClientException("From and To paths cannot be null.");
+            throw new Exceptions\BoxClientException("From and To paths cannot be null.");
         }
 
         //Response
@@ -528,13 +531,13 @@ class BoxMain
      *
      * @link https://www.box.com/developers/documentation/http/documentation#files-copy
      *
-     * @return \Box\Models\FileMetadata|FileMetadata|DeletedMetadata
+     * @return \Pablo2309\BoxContent\Content\BoxFileMetadata|BoxFileMetadata|DeletedMetadata
      */
     public function copy($fromPath, $toPath)
     {
         //From and To paths cannot be null
         if (is_null($fromPath) || is_null($toPath)) {
-            throw new BoxClientException("From and To paths cannot be null.");
+            throw new Exceptions\BoxClientException("From and To paths cannot be null.");
         }
 
         //Response
@@ -552,13 +555,13 @@ class BoxMain
      *
      * @link https://www.box.com/developers/documentation/http/documentation#files-restore
      *
-     * @return \Box\Models\DeletedMetadata|FileMetadata|FolderMetadata
+     * @return \Pablo2309\BoxContent\Content\DeletedMetadata|BoxFileMetadata|FolderMetadata
      */
     public function restore($path, $rev)
     {
         //Path and Revision cannot be null
         if (is_null($path) || is_null($rev)) {
-            throw new BoxClientException("Path and Revision cannot be null.");
+            throw new Exceptions\BoxClientException("Path and Revision cannot be null.");
         }
 
         //Response
@@ -568,7 +571,7 @@ class BoxMain
         $body = $response->getDecodedBody();
 
         //Make and Return the Model
-        return new FileMetadata($body);
+        return new BoxFileMetadata($body);
     }
 
     /**
@@ -578,13 +581,13 @@ class BoxMain
      *
      * @link https://www.box.com/developers/documentation/http/documentation#files-copy_reference-get
      *
-     * @return \Box\Models\CopyReference
+     * @return \Pablo2309\BoxContent\Content\CopyReference
      */
     public function getCopyReference($path)
     {
         //Path cannot be null
         if (is_null($path)) {
-            throw new BoxClientException("Path cannot be null.");
+            throw new Exceptions\BoxClientException("Path cannot be null.");
         }
 
         //Get Copy Reference
@@ -603,13 +606,13 @@ class BoxMain
      *
      * @link https://www.box.com/developers/documentation/http/documentation#files-copy_reference-save
      *
-     * @return \Box\Models\FileMetadata|\Box\Models\FolderMetadata
+     * @return \Pablo2309\BoxContent\Content\BoxFileMetadata|\Pablo2309\BoxContent\Content\FolderMetadata
      */
     public function saveCopyReference($path, $copyReference)
     {
         //Path and Copy Reference cannot be null
         if (is_null($path) || is_null($copyReference)) {
-            throw new BoxClientException("Path and Copy Reference cannot be null.");
+            throw new Exceptions\BoxClientException("Path and Copy Reference cannot be null.");
         }
 
         //Save Copy Reference
@@ -618,7 +621,7 @@ class BoxMain
 
         //Response doesn't have Metadata
         if (!isset($body['metadata']) || !is_array($body['metadata'])) {
-            throw new BoxClientException("Invalid Response.");
+            throw new Exceptions\BoxClientException("Invalid Response.");
         }
 
         //Make and return the Model
@@ -632,13 +635,13 @@ class BoxMain
      *
      * https://www.box.com/developers/documentation/http/documentation#files-get_temporary_link
      *
-     * @return \Box\Models\TemporaryLink
+     * @return \Pablo2309\BoxContent\Content\TemporaryLink
      */
     public function getTemporaryLink($path)
     {
         //Path cannot be null
         if (is_null($path)) {
-            throw new BoxClientException("Path cannot be null.");
+            throw new Exceptions\BoxClientException("Path cannot be null.");
         }
 
         //Get Temporary Link
@@ -662,7 +665,7 @@ class BoxMain
     {
         //Path and URL cannot be null
         if (is_null($path) || is_null($url)) {
-            throw new BoxClientException("Path and URL cannot be null.");
+            throw new Exceptions\BoxClientException("Path and URL cannot be null.");
         }
 
         //Save URL
@@ -670,7 +673,7 @@ class BoxMain
         $body = $response->getDecodedBody();
 
         if (!isset($body['async_job_id'])) {
-            throw new BoxClientException("Could not retrieve Async Job ID.");
+            throw new Exceptions\BoxClientException("Could not retrieve Async Job ID.");
         }
 
         //Return the Asunc Job ID
@@ -685,13 +688,13 @@ class BoxMain
      *
      * @link https://www.box.com/developers/documentation/http/documentation#files-save_url-check_job_status
      *
-     * @return string|FileMetadata Status (failed|in_progress) or FileMetadata (if complete)
+     * @return string|BoxFileMetadata Status (failed|in_progress) or BoxFileMetadata (if complete)
      */
     public function checkJobStatus($asyncJobId)
     {
         //Async Job ID cannot be null
         if (is_null($asyncJobId)) {
-            throw new BoxClientException("Async Job ID cannot be null.");
+            throw new Exceptions\BoxClientException("Async Job ID cannot be null.");
         }
 
         //Get Job Status
@@ -703,7 +706,7 @@ class BoxMain
 
         //If status is complete
         if ($status === 'complete') {
-            return new FileMetadata($body);
+            return new BoxFileMetadata($body);
         }
 
         //Return the status
@@ -713,305 +716,52 @@ class BoxMain
     /**
      * Upload a File to Box
      *
-     * @param  string|BoxFile $dropboxFile BoxFile object or Path to file
-     * @param  string             $path        Path to upload the file to
+     * @param  string|BoxFile $boxFile BoxFile object or Path to file
+     * @param  string             $folder        Path to upload the file to
      * @param  array              $params      Additional Params
      *
      * @link https://www.box.com/developers/documentation/http/documentation#files-upload
      *
-     * @return \Box\Models\FileMetadata
+     * @return \Pablo2309\BoxContent\Content\BoxFileMetadata
      */
-    public function upload($dropboxFile, $path, array $params = [])
+    public function upload($boxFile, $attributes, array $params = [])
     {
         //Make BoxMain File
-        $dropboxFile = $this->makeBoxFile($dropboxFile);
-
-        //If the file is larger than the Chunked Upload Threshold
-        if ($dropboxFile->getSize() > static::AUTO_CHUNKED_UPLOAD_THRESHOLD) {
-            //Upload the file in sessions/chunks
-            return $this->uploadChunked($dropboxFile, $path, null, null, $params);
-        }
+        $boxFile = $this->makeBoxFile($boxFile);
 
         //Simple file upload
-        return $this->simpleUpload($dropboxFile, $path, $params);
+        return $this->simpleUpload($boxFile, $attributes, $params);
     }
 
     /**
      * Upload a File to BoxMain in a single request
      *
-     * @param  string|BoxFile $dropboxFile BoxFile object or Path to file
-     * @param  string             $path        Path to upload the file to
+     * @param  string|BoxFile $boxFile BoxFile object or Path to file
+     * @param  array             $path        Path to upload the file to
      * @param  array              $params      Additional Params
      *
      * @link https://www.box.com/developers/documentation/http/documentation#files-upload
      *
-     * @return \Box\Models\FileMetadata
+     * @return \Pablo2309\BoxContent\Content\BoxFileMetadata
      */
-    public function simpleUpload($dropboxFile, $path, array $params = [])
+    public function simpleUpload($boxFile, $attributes, array $params = [])
     {
         //Make BoxMain File
-        $dropboxFile = $this->makeBoxFile($dropboxFile);
+        $boxFile = $this->makeBoxFile($boxFile);
 
-        //Set the path and file
-        $params['path'] = $path;
-        $params['file'] = $dropboxFile;
+        //Set the attributes and file
+        $params['attributes'] = $attributes;
+        $params['file'] = $boxFile;
 
         //Upload File
-        $file = $this->postToContent('/files/upload', $params);
+        $file = $this->postToContent('/files/content', $params);
         $body = $file->getDecodedBody();
 
         //Make and Return the Model
-        return new FileMetadata($body);
-    }
-
-    /**
-     * Start an Upload Session
-     *
-     * @param  string|BoxFile $dropboxFile BoxFile object or Path to file
-     * @param  int                $chunkSize   Size of file chunk to upload
-     * @param  boolean            $close       Closes the session for "appendUploadSession"
-     *
-     * @link https://www.box.com/developers/documentation/http/documentation#files-upload_session-start
-     *
-     * @return string Unique identifier for the upload session
-     */
-    public function startUploadSession($dropboxFile, $chunkSize = -1, $close = false)
-    {
-        //Make BoxMain File with the given chunk size
-        $dropboxFile = $this->makeBoxFile($dropboxFile, $chunkSize);
-
-        //Set the close param
-        $params['close'] = $close ? true : false;
-
-        //Set the file param
-        $params['file'] = $dropboxFile;
-
-        //Upload File
-        $file = $this->postToContent('/files/upload_session/start', $params);
-        $body = $file->getDecodedBody();
-
-        //Cannot retrieve Session ID
-        if (!isset($body['session_id'])) {
-            throw new BoxClientException("Could not retrieve Session ID.");
-        }
-
-        //Return the Session ID
-        return $body['session_id'];
-    }
-
-    /**
-     * Finish an upload session and save the uploaded data to the given file path
-     *
-     * @param  string|BoxFile $dropboxFile BoxFile object or Path to file
-     * @param  string $sessionId   Session ID returned by `startUploadSession`
-     * @param  int    $offset      The amount of data that has been uploaded so far
-     * @param  int    $remaining   The amount of data that is remaining
-     * @param  string $path        Path to save the file to, on Box
-     * @param  array  $params      Additional Params
-     *
-     * @link https://www.box.com/developers/documentation/http/documentation#files-upload_session-finish
-     *
-     * @return \Box\Models\FileMetadata
-     */
-    public function finishUploadSession($dropboxFile, $sessionId, $offset, $remaining, $path, array $params = [])
-    {
-        //Make BoxMain File
-        $dropboxFile = $this->makeBoxFile($dropboxFile, $remaining, $offset);
-
-        //Session ID, offset, remaining and path cannot be null
-        if (is_null($sessionId) || is_null($path) || is_null($offset) || is_null($remaining)) {
-            throw new BoxClientException("Session ID, offset, remaining and path cannot be null");
-        }
-
-        $queryParams = [];
-
-        //Set the File
-        $queryParams['file'] = $dropboxFile;
-
-        //Set the Cursor: Session ID and Offset
-        $queryParams['cursor'] = ['session_id' => $sessionId, 'offset' => $offset];
-
-        //Set the path
-        $params['path'] = $path;
-        //Set the Commit
-        $queryParams['commit'] = $params;
-
-        //Upload File
-        $file = $this->postToContent('/files/upload_session/finish', $queryParams);
-        $body = $file->getDecodedBody();
-
-        //Make and Return the Model
-        return new FileMetadata($body);
-    }
-
-    /**
-     * Append more data to an Upload Session
-     *
-     * @param  string|BoxFile $dropboxFile BoxFile object or Path to file
-     * @param  string             $sessionId   Session ID returned by `startUploadSession`
-     * @param  int                $offset      The amount of data that has been uploaded so far
-     * @param  int                $chunkSize   The amount of data to upload
-     * @param  boolean            $close       Closes the session for futher "appendUploadSession" calls
-     *
-     * @link https://www.box.com/developers/documentation/http/documentation#files-upload_session-append_v2
-     *
-     * @return string Unique identifier for the upload session
-     */
-    public function appendUploadSession($dropboxFile, $sessionId, $offset, $chunkSize, $close = false)
-    {
-        //Make BoxMain File
-        $dropboxFile = $this->makeBoxFile($dropboxFile, $chunkSize, $offset);
-
-        //Session ID, offset, chunkSize and path cannot be null
-        if (is_null($sessionId) || is_null($offset) || is_null($chunkSize)) {
-            throw new BoxClientException("Session ID, offset and chunk size cannot be null");
-        }
-
-        $params = [];
-
-        //Set the File
-        $params['file'] = $dropboxFile;
-
-        //Set the Cursor: Session ID and Offset
-        $params['cursor'] = ['session_id' => $sessionId, 'offset' => $offset];
-
-        //Set the close param
-        $params['close'] = $close ? true : false;
-
-        //Since this endpoint doesn't have
-        //any return values, we'll disable the
-        //response validation for this request.
-        $params['validateResponse'] = false;
-
-        //Upload File
-        $file = $this->postToContent('/files/upload_session/append_v2', $params);
-
-        //Make and Return the Model
-        return $sessionId;
-    }
-
-    /**
-     * Upload file in sessions/chunks
-     *
-     * @param  string|BoxFile $dropboxFile BoxFile object or Path to file
-     * @param  string             $path        Path to save the file to, on Box
-     * @param  int                $fileSize    The size of the file
-     * @param  int                $chunkSize   The amount of data to upload in each chunk
-     * @param  array              $params      Additional Params
-     *
-     * @link https://www.box.com/developers/documentation/http/documentation#files-upload_session-start
-     * @link https://www.box.com/developers/documentation/http/documentation#files-upload_session-finish
-     * @link https://www.box.com/developers/documentation/http/documentation#files-upload_session-append_v2
-     *
-     * @return string Unique identifier for the upload session
-     */
-    public function uploadChunked($dropboxFile, $path, $fileSize = null, $chunkSize = null, array $params = array())
-    {
-        //Make BoxMain File
-        $dropboxFile = $this->makeBoxFile($dropboxFile);
-
-        //No file size specified explicitly
-        if (is_null($fileSize)) {
-            $fileSize = $dropboxFile->getSize();
-        }
-
-        //No chunk size specified, use default size
-        if (is_null($chunkSize)) {
-            $chunkSize = static::DEFAULT_CHUNK_SIZE;
-        }
-
-        //If the filesize is smaller
-        //than the chunk size, we'll
-        //make the chunk size relatively
-        //smaller than the file size
-        if ($fileSize <= $chunkSize) {
-            $chunkSize = $fileSize / 2;
-        }
-
-        //Start the Upload Session with the file path
-        //since the BoxFile object will be created
-        //again using the new chunk size.
-        $sessionId = $this->startUploadSession($dropboxFile->getFilePath(), $chunkSize);
-
-        //Uploaded
-        $uploaded = $chunkSize;
-
-        //Remaining
-        $remaining = $fileSize - $chunkSize;
-
-        //While the remaining bytes are
-        //more than the chunk size, append
-        //the chunk to the upload session.
-        while ($remaining > $chunkSize) {
-            //Append the next chunk to the Upload session
-            $sessionId = $this->appendUploadSession($dropboxFile, $sessionId, $uploaded, $chunkSize);
-
-            //Update remaining and uploaded
-            $uploaded = $uploaded + $chunkSize;
-            $remaining = $remaining - $chunkSize;
-        }
-
-        //Finish the Upload Session and return the Uploaded File Metadata
-        return $this->finishUploadSession($dropboxFile, $sessionId, $uploaded, $remaining, $path, $params);
-    }
-
-    /**
-     * Get thumbnail size
-     *
-     * @param  string $size Thumbnail Size
-     *
-     * @return string
-     */
-    protected function getThumbnailSize($size)
-    {
-        $thumbnailSizes = [
-            'thumb'  => 'w32h32',
-            'small'  => 'w64h64',
-            'medium' => 'w128h128',
-            'large'  => 'w640h480',
-            'huge'   => 'w1024h768'
-        ];
-
-        return isset($thumbnailSizes[$size]) ? $thumbnailSizes[$size] : $thumbnailSizes['small'];
-    }
-
-    /**
-     * Get a thumbnail for an image
-     *
-     * @param  string $path   Path to the file you want a thumbnail to
-     * @param  string $size   Size for the thumbnail image ['thumb','small','medium','large','huge']
-     * @param  string $format Format for the thumbnail image ['jpeg'|'png']
-     *
-     * @link https://www.box.com/developers/documentation/http/documentation#files-get_thumbnail
-     *
-     * @return \Box\Models\Thumbnail
-     */
-    public function getThumbnail($path, $size = 'small', $format = 'jpeg')
-    {
-        //Path cannot be null
-        if (is_null($path)) {
-            throw new BoxClientException("Path cannot be null.");
-        }
-
-        //Invalid Format
-        if (!in_array($format, ['jpeg', 'png'])) {
-            throw new BoxClientException("Invalid format. Must either be 'jpeg' or 'png'.");
-        }
-
-        //Thumbnail size
-        $size = $this->getThumbnailSize($size);
-
-        //Get Thumbnail
-        $response = $this->postToContent('/files/get_thumbnail', ['path' => $path, 'format' => $format, 'size' => $size]);
-
-        //Get file metadata from response headers
-        $metadata = $this->getMetadataFromResponseHeaders($response);
-
-        //File Contents
-        $contents = $response->getBody();
-
-        //Make and return a Thumbnail model
-        return new Thumbnail($metadata, $contents);
+        $fileData = array();
+        if ($body["total_count"])
+            $fileData = $body["entries"][0];
+        return new BoxFileMetadata($fileData);
     }
 
     /**
@@ -1021,13 +771,13 @@ class BoxMain
      *
      * @link https://www.box.com/developers/documentation/http/documentation#files-download
      *
-     * @return \Box\Models\File
+     * @return \Pablo2309\BoxContent\Content\File
      */
     public function download($path)
     {
         //Path cannot be null
         if (is_null($path)) {
-            throw new BoxClientException("Path cannot be null.");
+            throw new Exceptions\BoxClientException("Path cannot be null.");
         }
 
         //Download File
@@ -1079,75 +829,4 @@ class BoxMain
         return $metadata;
     }
 
-    /**
-     * Get Current Account
-     *
-     * @link https://www.box.com/developers/documentation/http/documentation#users-get_current_account
-     *
-     * @return \Box\Models\Account
-     */
-    public function getCurrentAccount()
-    {
-        //Get current account
-        $response = $this->postToAPI('/users/get_current_account', []);
-        $body = $response->getDecodedBody();
-
-        //Make and return the model
-        return new Account($body);
-    }
-
-    /**
-     * Get Account
-     *
-     * @param string $account_id Account ID of the account to get details for
-     *
-     * @link https://www.box.com/developers/documentation/http/documentation#users-get_account
-     *
-     * @return \Box\Models\Account
-     */
-    public function getAccount($account_id)
-    {
-        //Get account
-        $response = $this->postToAPI('/users/get_account', ['account_id' => $account_id]);
-        $body = $response->getDecodedBody();
-
-        //Make and return the model
-        return new Account($body);
-    }
-
-    /**
-     * Get Multiple Accounts in one call
-     *
-     * @param string $account_id Account ID of the account to get details for
-     *
-     * @link https://www.box.com/developers/documentation/http/documentation#users-get_account_batch
-     *
-     * @return \Box\Models\AccountList
-     */
-    public function getAccounts(array $account_ids = [])
-    {
-        //Get account
-        $response = $this->postToAPI('/users/get_account_batch', ['account_ids' => $account_ids]);
-        $body = $response->getDecodedBody();
-
-        //Make and return the model
-        return new AccountList($body);
-    }
-
-    /**
-     * Get Space Usage for the current user's account
-     *
-     * @link https://www.box.com/developers/documentation/http/documentation#users-get_space_usage
-     *
-     * @return array
-     */
-    public function getSpaceUsage()
-    {
-        //Get space usage
-        $response = $this->postToAPI('/users/get_space_usage', []);
-        $body = $response->getDecodedBody();
-
-        //Return the decoded body
-        return $body;
-    }
 }

@@ -1,6 +1,6 @@
 <?php
 namespace Pablo2309\BoxContent\Base;
-
+use Pablo2309\BoxContent\Content\BoxFile;
 
 class BoxRequest
 {

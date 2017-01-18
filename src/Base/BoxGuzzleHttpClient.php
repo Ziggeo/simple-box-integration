@@ -54,6 +54,16 @@ class BoxGuzzleHttpClient implements BoxHttpClientInterface
         } catch (RequestException $e) {
             $rawResponse = $e->getResponse();
 
+            if ($e->getCode() === 409) {
+                $body = $this->getResponseBody($rawResponse);
+
+                $rawHeaders = $rawResponse->getHeaders();
+                $httpStatusCode = $rawResponse->getStatusCode();
+
+                //Create and return a BoxRawResponse object
+                return new BoxRawResponse($rawHeaders, $body, $httpStatusCode);
+            }
+
             if ($e->getPrevious() instanceof RingException || !$rawResponse instanceof ResponseInterface) {
                 throw new Exceptions\BoxClientException($e->getMessage(), $e->getCode());
             }

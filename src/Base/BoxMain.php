@@ -214,6 +214,20 @@ class BoxMain
     }
 
     /**
+     * Make a HTTP DELETE Request to the API endpoint type
+     *
+     * @param  string $endpoint     API Endpoint to send Request to
+     * @param  array  $params       Request Query Params
+     * @param  string $accessToken Access Token to send with the Request
+     *
+     * @return BoxResponse
+     */
+    public function deleteToAPI($endpoint, array $params = [], $accessToken = null)
+    {
+        return $this->sendRequest("DELETE", $endpoint, 'api', $params, $accessToken);
+    }
+
+    /**
      * Make a HTTP POST Request to the Content endpoint type
      *
      * @param  string $endpoint     Content Endpoint to send Request to
@@ -225,6 +239,20 @@ class BoxMain
     public function postToContent($endpoint, array $params = [], $accessToken = null)
     {
         return $this->sendRequest("POST", $endpoint, 'upload', $params, $accessToken);
+    }
+
+    /**
+     * Make a HTTP DELETE Request to the Content endpoint type
+     *
+     * @param  string $endpoint     Content Endpoint to send Request to
+     * @param  array  $params       Request Query Params
+     * @param  string $accessToken Access Token to send with the Request
+     *
+     * @return BoxResponse
+     */
+    public function deleteToContent($endpoint, array $params = [], $accessToken = null)
+    {
+        return $this->sendRequest("DELETE", $endpoint, 'upload', $params, $accessToken);
     }
 
     /**
@@ -470,7 +498,12 @@ class BoxMain
         $response = $this->postToAPI('/folders', ['name' => $name, 'autorename' => $autorename, 'parent' => array("id" => 0)]);
 
         //Fetch the Metadata
-        $body = $response->getDecodedBody();
+        if ($response->getHttpStatusCode() === 409) {
+            $body = $response->getDecodedBody();
+            $body = $body["context_info"]["conflicts"][0];
+        } else{
+            $body = $response->getDecodedBody();
+        }
 
         //Make and Return the Model
 
@@ -486,17 +519,39 @@ class BoxMain
      *
      * @return \Pablo2309\BoxContent\Content\DeletedMetadata|BoxFileMetadata|FolderMetadata
      */
-    public function delete($path)
+    public function deleteFile($fileId)
     {
         //Path cannot be null
-        if (is_null($path)) {
-            throw new Exceptions\BoxClientException("Path cannot be null.");
+        if (is_null($fileId)) {
+            throw new Exceptions\BoxClientException("Id cannot be null.");
         }
 
         //Delete
-        $response = $this->postToAPI('/files/delete', ['path' => $path]);
+        $response = $this->deleteToAPI('/files/' . $fileId);
 
-        return $this->makeModelFromResponse($response);
+        return $response;
+    }
+
+    /**
+     * Delete a file or folder at the given path
+     *
+     * @param  string $path Path to file/folder to delete
+     *
+     * @link https://www.box.com/developers/documentation/http/documentation#files-delete
+     *
+     * @return \Pablo2309\BoxContent\Content\DeletedMetadata|BoxFileMetadata|FolderMetadata
+     */
+    public function deleteFolder($folderId)
+    {
+        //Path cannot be null
+        if (is_null($folderId)) {
+            throw new Exceptions\BoxClientException("Id cannot be null.");
+        }
+
+        //Delete
+        $response = $this->deleteToAPI('/folders/' . $folderId);
+
+        return $response;
     }
 
     /**

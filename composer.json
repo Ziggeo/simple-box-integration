@@ -7,7 +7,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Pablo2309\\BoxContent\\Base": "src/Base"
+            "Pablo2309\\BoxContent\\": "src/"
         }
     }
 }

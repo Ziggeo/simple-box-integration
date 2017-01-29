@@ -1,5 +1,5 @@
 {
-    "name": "Ziggeo/simple-box-integration",
+    "name": "ziggeo/simple-box-integration",
     "description": "Simple PHP wrapper for the Box API",
 	"version" : "0.0.1",
 	"license" : "Apache-2.0",

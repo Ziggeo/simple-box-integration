@@ -1,6 +1,6 @@
 <?php
 
-namespace Pablo2309\BoxContent\Base;
+namespace Ziggeo\BoxContent\Base;
 
 
 class BoxRawResponse

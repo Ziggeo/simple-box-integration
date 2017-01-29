@@ -1,5 +1,5 @@
 <?php
-namespace Pablo2309\BoxContent\Base;
+namespace Ziggeo\BoxContent\Base;
 use InvalidArgumentException;
 use GuzzleHttp\Client as Guzzle;
 

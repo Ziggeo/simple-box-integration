@@ -1,5 +1,5 @@
 <?php
-namespace Pablo2309\BoxContent\Content;
+namespace Ziggeo\BoxContent\Content;
 
 class BoxFileMetadata extends BaseModel
 {

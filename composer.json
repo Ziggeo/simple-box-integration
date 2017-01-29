@@ -1,7 +1,7 @@
 {
     "name": "ziggeo/simple-box-integration",
     "description": "Simple PHP wrapper for the Box API",
-	"version" : "0.0.1",
+	"version" : "0.0.2",
 	"license" : "Apache-2.0",
     "require": {
         "stevenmaguire/oauth2-box": "^0.1.0",

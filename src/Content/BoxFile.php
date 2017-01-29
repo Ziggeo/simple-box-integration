@@ -1,8 +1,8 @@
 <?php
 
-namespace Pablo2309\BoxContent\Content;
+namespace Ziggeo\BoxContent\Content;
 
-use Pablo2309\BoxContent\Base\Exceptions\BoxClientException;
+use Ziggeo\BoxContent\Base\Exceptions\BoxClientException;
 
 
 class BoxFile
@@ -44,7 +44,7 @@ class BoxFile
      * @param int $maxLength   Max Bytes to read from the file
      * @param int $offset      Seek to specified offset before reading
      *
-     * @throws \Pablo2309\BoxContent\Base\Exceptions\BoxClientException
+     * @throws \Ziggeo\BoxContent\Base\Exceptions\BoxClientException
      */
     public function __construct($filePath, $maxLength = -1, $offset = -1)
     {

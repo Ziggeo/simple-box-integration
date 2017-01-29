@@ -1,8 +1,8 @@
 <?php
-namespace Pablo2309\BoxContent\Base;
-use Pablo2309\BoxContent\Content\BoxFile;
-use Pablo2309\BoxContent\Content\BoxFileMetadata;
-use Pablo2309\BoxContent\Content\FolderMetadata;
+namespace Ziggeo\BoxContent\Base;
+use Ziggeo\BoxContent\Content\BoxFile;
+use Ziggeo\BoxContent\Content\BoxFileMetadata;
+use Ziggeo\BoxContent\Content\FolderMetadata;
 use GuzzleHttp\Psr7\Stream;
 use GuzzleHttp\Psr7\Request;
 use Stevenmaguire\OAuth2\Client\Provider\Box;
@@ -260,7 +260,7 @@ class BoxMain
      *
      * @param  BoxResponse $response
      *
-     * @return \Pablo2309\BoxContent\Content\ModelInterface
+     * @return \Ziggeo\BoxContent\Content\ModelInterface
      */
     public function makeModelFromResponse(BoxResponse $response)
     {
@@ -309,7 +309,7 @@ class BoxMain
      *
      * @link https://www.box.com/developers/documentation/http/documentation#files-get_metadata
      *
-     * @return \Pablo2309\BoxContent\Content\BoxFileMetadata|\Pablo2309\BoxContent\Content\FolderMetadata
+     * @return \Ziggeo\BoxContent\Content\BoxFileMetadata|\Ziggeo\BoxContent\Content\FolderMetadata
      */
     public function getMetadata($path, array $params = [])
     {
@@ -336,7 +336,7 @@ class BoxMain
      *
      * @link https://www.box.com/developers/documentation/http/documentation#files-list_folder
      *
-     * @return \Pablo2309\BoxContent\Content\MetadataCollection
+     * @return \Ziggeo\BoxContent\Content\MetadataCollection
      */
     public function listFolder($path = null, array $params = [])
     {
@@ -365,7 +365,7 @@ class BoxMain
      *
      * @link https://www.box.com/developers/documentation/http/documentation#files-list_folder-continue
      *
-     * @return \Pablo2309\BoxContent\Content\MetadataCollection
+     * @return \Ziggeo\BoxContent\Content\MetadataCollection
      */
     public function listFolderContinue($cursor)
     {
@@ -420,7 +420,7 @@ class BoxMain
      *
      * @link https://www.box.com/developers/documentation/http/documentation#files-list_revisions
      *
-     * @return \Pablo2309\BoxContent\Content\ModelCollection
+     * @return \Ziggeo\BoxContent\Content\ModelCollection
      */
     public function listRevisions($path, array $params = [])
     {
@@ -435,7 +435,7 @@ class BoxMain
         //is used by the ModelFactory to resolve the correct
         //model. But since we know that revisions returned
         //are file metadata objects, we can explicitly cast
-        //them as \Pablo2309\BoxContent\Content\BoxFileMetadata manually.
+        //them as \Ziggeo\BoxContent\Content\BoxFileMetadata manually.
         $body = $response->getDecodedBody();
         $entries = isset($body['entries']) ? $body['entries'] : [];
         $processedEntries = [];
@@ -456,7 +456,7 @@ class BoxMain
      *
      * @link https://www.box.com/developers/documentation/http/documentation#files-search
      *
-     * @return \Pablo2309\BoxContent\Content\SearchResults
+     * @return \Ziggeo\BoxContent\Content\SearchResults
      */
     public function search($path, $query, array $params = [])
     {
@@ -485,7 +485,7 @@ class BoxMain
      *
      * @link https://www.box.com/developers/documentation/http/documentation#files-create_folder
      *
-     * @return \Pablo2309\BoxContent\Content\FolderMetadata
+     * @return \Ziggeo\BoxContent\Content\FolderMetadata
      */
     public function createFolder($name, $autorename = false)
     {
@@ -517,7 +517,7 @@ class BoxMain
      *
      * @link https://www.box.com/developers/documentation/http/documentation#files-delete
      *
-     * @return \Pablo2309\BoxContent\Content\DeletedMetadata|BoxFileMetadata|FolderMetadata
+     * @return \Ziggeo\BoxContent\Content\DeletedMetadata|BoxFileMetadata|FolderMetadata
      */
     public function deleteFile($fileId)
     {
@@ -539,7 +539,7 @@ class BoxMain
      *
      * @link https://www.box.com/developers/documentation/http/documentation#files-delete
      *
-     * @return \Pablo2309\BoxContent\Content\DeletedMetadata|BoxFileMetadata|FolderMetadata
+     * @return \Ziggeo\BoxContent\Content\DeletedMetadata|BoxFileMetadata|FolderMetadata
      */
     public function deleteFolder($folderId)
     {
@@ -562,7 +562,7 @@ class BoxMain
      *
      * @link https://www.box.com/developers/documentation/http/documentation#files-move
      *
-     * @return \Pablo2309\BoxContent\Content\BoxFileMetadata|BoxFileMetadata|DeletedMetadata
+     * @return \Ziggeo\BoxContent\Content\BoxFileMetadata|BoxFileMetadata|DeletedMetadata
      */
     public function move($fromPath, $toPath)
     {
@@ -586,7 +586,7 @@ class BoxMain
      *
      * @link https://www.box.com/developers/documentation/http/documentation#files-copy
      *
-     * @return \Pablo2309\BoxContent\Content\BoxFileMetadata|BoxFileMetadata|DeletedMetadata
+     * @return \Ziggeo\BoxContent\Content\BoxFileMetadata|BoxFileMetadata|DeletedMetadata
      */
     public function copy($fromPath, $toPath)
     {
@@ -610,7 +610,7 @@ class BoxMain
      *
      * @link https://www.box.com/developers/documentation/http/documentation#files-restore
      *
-     * @return \Pablo2309\BoxContent\Content\DeletedMetadata|BoxFileMetadata|FolderMetadata
+     * @return \Ziggeo\BoxContent\Content\DeletedMetadata|BoxFileMetadata|FolderMetadata
      */
     public function restore($path, $rev)
     {
@@ -636,7 +636,7 @@ class BoxMain
      *
      * @link https://www.box.com/developers/documentation/http/documentation#files-copy_reference-get
      *
-     * @return \Pablo2309\BoxContent\Content\CopyReference
+     * @return \Ziggeo\BoxContent\Content\CopyReference
      */
     public function getCopyReference($path)
     {
@@ -661,7 +661,7 @@ class BoxMain
      *
      * @link https://www.box.com/developers/documentation/http/documentation#files-copy_reference-save
      *
-     * @return \Pablo2309\BoxContent\Content\BoxFileMetadata|\Pablo2309\BoxContent\Content\FolderMetadata
+     * @return \Ziggeo\BoxContent\Content\BoxFileMetadata|\Ziggeo\BoxContent\Content\FolderMetadata
      */
     public function saveCopyReference($path, $copyReference)
     {
@@ -690,7 +690,7 @@ class BoxMain
      *
      * https://www.box.com/developers/documentation/http/documentation#files-get_temporary_link
      *
-     * @return \Pablo2309\BoxContent\Content\TemporaryLink
+     * @return \Ziggeo\BoxContent\Content\TemporaryLink
      */
     public function getTemporaryLink($path)
     {
@@ -777,7 +777,7 @@ class BoxMain
      *
      * @link https://www.box.com/developers/documentation/http/documentation#files-upload
      *
-     * @return \Pablo2309\BoxContent\Content\BoxFileMetadata
+     * @return \Ziggeo\BoxContent\Content\BoxFileMetadata
      */
     public function upload($boxFile, $attributes, array $params = [])
     {
@@ -797,7 +797,7 @@ class BoxMain
      *
      * @link https://www.box.com/developers/documentation/http/documentation#files-upload
      *
-     * @return \Pablo2309\BoxContent\Content\BoxFileMetadata
+     * @return \Ziggeo\BoxContent\Content\BoxFileMetadata
      */
     public function simpleUpload($boxFile, $attributes, array $params = [])
     {
@@ -826,7 +826,7 @@ class BoxMain
      *
      * @link https://www.box.com/developers/documentation/http/documentation#files-download
      *
-     * @return \Pablo2309\BoxContent\Content\File
+     * @return \Ziggeo\BoxContent\Content\File
      */
     public function download($path)
     {

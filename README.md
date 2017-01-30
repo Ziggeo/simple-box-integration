@@ -46,7 +46,13 @@ $boxApp = new BoxApp("clientID", "clientSecret", "accessToken");
 $boxMain = new BoxMain($boxApp);
 $resp = $boxMain->sendRequest("/users/me", "api", array(), "accessToken");
 ```
+where:
+- The first param is the proper endpoint. Check the list [here](https://docs.box.com/reference).
+- The second is the endpoint type: api or upload. This depends on the endpoint. (Optional)
+- The third is an array with options. (Optional)
+- The last is the accessToken provided by Box. (Optional)
 
-## Credits
+
+## Main contributors
 
 - [Pablo Iglesias](https://github.com/iglesiaspablo)

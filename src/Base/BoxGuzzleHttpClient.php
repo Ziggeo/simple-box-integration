@@ -1,5 +1,5 @@
 <?php
-namespace Pablo2309\BoxContent\Base;
+namespace Ziggeo\BoxContent\Base;
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Request;
 use Psr\Http\Message\StreamInterface;

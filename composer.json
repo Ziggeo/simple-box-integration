@@ -1,6 +1,8 @@
 {
-    "name": "Pablo2309/simple-box-integration",
+    "name": "ziggeo/simple-box-integration",
     "description": "Simple PHP wrapper for the Box API",
+	"version" : "0.0.2",
+	"license" : "Apache-2.0",
     "require": {
         "guzzlehttp/guzzle": "~6.0"
     },

@@ -1,7 +1,7 @@
 <?php
 
-namespace Pablo2309\BoxContent\Base;
-use Pablo2309\BoxContent\Content\BoxFile;
+namespace Ziggeo\BoxContent\Base;
+use Ziggeo\BoxContent\Content\BoxFile;
 
 
 class RequestBodyStream implements RequestBodyInterface

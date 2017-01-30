@@ -1,5 +1,5 @@
 <?php
-namespace Pablo2309\BoxContent\Base\Exceptions;
+namespace Ziggeo\BoxContent\Base\Exceptions;
 
 use Exception;
 

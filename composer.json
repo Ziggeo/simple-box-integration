@@ -4,7 +4,6 @@
 	"version" : "0.0.2",
 	"license" : "Apache-2.0",
     "require": {
-        "stevenmaguire/oauth2-box": "^0.1.0",
         "guzzlehttp/guzzle": "~6.0"
     },
     "autoload": {

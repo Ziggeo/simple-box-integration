@@ -24,6 +24,7 @@ The wrapper can be used with the magic methods for files or folders:
 use Ziggeo\BoxContent\Base\BoxApp;
 use Ziggeo\BoxContent\Base\BoxMain;
 use Ziggeo\BoxContent\Content\BoxFile;
+use Ziggeo\BoxContent\Base\Exceptions\BoxClientException;
 
 
 $boxApp = new BoxApp("clientID", "clientSecret", "accessToken");
@@ -34,9 +35,14 @@ $boxFile = new BoxFile("/path/to/file.txt");
 
 $folder = $boxMain->createFolder("FolderName");
 
+try {
 $file = $boxMain->upload($boxFile, array("parent" => array("id" => $folder->getId()), "name" => "file_name_in_box.txt"));
-
 $resp = $boxMain->deleteFile($file->getId());
+} catch (BoxClientException $exception) {
+    echo $exception->getMessage();
+}
+
+
 ```
 or using the sendRequest method with the correct params:
 

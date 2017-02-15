@@ -811,10 +811,11 @@ class BoxMain
         //Upload File
         $file = $this->postToContent('/files/content', $params);
         $body = $file->getDecodedBody();
-
+        if ($body["type"] == "error")
+            throw new Exceptions\BoxClientException($body["message"] . " - ID: " . $body["context_info"]["conflicts"]["id"], $body["status"]);
         //Make and Return the Model
         $fileData = array();
-        if ($body["total_count"])
+        if (!empty($body["total_count"]) && $body["total_count"])
             $fileData = $body["entries"][0];
         return new BoxFileMetadata($fileData);
     }

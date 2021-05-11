@@ -77,7 +77,7 @@ class BoxGuzzleHttpClient implements BoxHttpClientInterface
         //Get the Response Body
         $body = $this->getResponseBody($rawResponse);
 
-        $rawHeaders = $rawResponse->getHeaders();
+        $rawHeaders = array_change_key_case($rawResponse->getHeaders(), CASE_LOWER);
         $httpStatusCode = $rawResponse->getStatusCode();
 
         //Create and return a BoxRawResponse object

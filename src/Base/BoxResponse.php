@@ -131,7 +131,7 @@ class BoxResponse
     {
         $body = $this->getBody();
 
-        if (isset($this->headers['Content-Type']) && in_array('application/json', $this->headers['Content-Type'])) {
+        if (isset($this->headers['content-type']) && in_array('application/json', $this->headers['content-type'])) {
             $this->decodedBody = json_decode((string)$body, true);
         } else {
             $this->decodedBody = $this->body;

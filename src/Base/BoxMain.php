@@ -811,7 +811,7 @@ class BoxMain
         //Upload File
         $file = $this->postToContent('/files/content', $params);
         $body = $file->getDecodedBody();
-        if ($body["type"] == "error")
+        if (isset($body["type"]) && $body["type"] == "error")
             throw new Exceptions\BoxClientException($body["message"] . " - ID: " . $body["context_info"]["conflicts"]["id"], $body["status"]);
         //Make and Return the Model
         $fileData = array();
